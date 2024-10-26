@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vote Now</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        button { margin: 10px; padding: 10px 20px; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>Vote for an Option</h1>
+    <button onclick="submitVote('option1')">Option 1</button>
+    <button onclick="submitVote('option2')">Option 2</button>
+
+    <p id="result"></p>
+
+    <script>
+        function submitVote(option) {
+            fetch("/vote", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ choice: option })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerText = 
+                    `Votes: Option 1 = ${data.option1}, Option 2 = ${data.option2}`;
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+</body>
+</html>
