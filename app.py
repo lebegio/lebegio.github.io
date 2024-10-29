@@ -25,5 +25,26 @@ def results():
     print('Results')
     return jsonify(votes)
 
+# Replace with your own verification function (TON-related)
+def verify_user(wallet_address):
+    # Implement your verification logic
+    # This can include checking the wallet address against a whitelist
+    # or verifying a signed message if needed.
+    return True
+
+@app.route('/connect', methods=['POST'])
+def connect():
+    # Receive the wallet connection data from the frontend
+    data = request.json
+    wallet_address = data.get("wallet_address")
+    
+    # Verify the wallet address (dummy verification here for example purposes)
+    is_verified = verify_user(wallet_address)
+    
+    if is_verified:
+        return jsonify({"status": "success", "message": "Wallet verified."})
+    else:
+        return jsonify({"status": "error", "message": "Wallet verification failed."})
+
 if __name__ == "__main__":
     app.run(port=5000)
