@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler
-import local_config as config
+import tg_bot.local_config as config
 
 # Replace with your bot token
 #web_app_url = "http://127.0.0.1:5000/"  # Replace with your server URL
