@@ -5,5 +5,5 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), nodePolyfills()],
-  base: '/lebegio.github.io/',
+  base: '/lebegio.github.io/docs/',
 });
