@@ -1,10 +1,10 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler
-import tg_bot.local_config as config
+import local_config as config
 
 # Replace with your bot token
 #web_app_url = "http://127.0.0.1:5000/"  # Replace with your server URL
-web_app_url = "https://www.google.com/"
+web_app_url = "https://lebegio.github.io/docs/"
 # test commit after repo renaming
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
