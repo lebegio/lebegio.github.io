@@ -1,0 +1,685 @@
+.fragment c4_to_c7, {
+	PUSHROOT
+	CTOS
+	LDU 256 ; pubkey c4
+	LDU 64 ; pubkey timestamp c4
+	LDU 1 ; ctor flag
+	LDDICT
+	LDDICT
+	LDU 128
+	LDU 128
+	LDREF
+	ENDS
+	CTOS
+	LDMSGADDR
+	LDU 128
+	ENDS
+	SETGLOB 15
+	SETGLOB 14
+	SETGLOB 13
+	SETGLOB 12
+	SETGLOB 11
+	SETGLOB 10
+	SETGLOB 6
+	SETGLOB 3
+	SETGLOB 2
+}
+
+.fragment c7_to_c4, {
+	GETGLOB 15
+	GETGLOB 14
+	GETGLOB 13
+	GETGLOB 12
+	GETGLOB 11
+	GETGLOB 10
+	GETGLOB 3
+	GETGLOB 2
+	NEWC
+	STU 256
+	STU 64
+	STONE
+	STDICT
+	STDICT
+	STU 128
+	STU 128
+	ROTREV
+	NEWC
+	STSLICE
+	STU 128
+	STBREFR
+	ENDC
+	POPROOT
+}
+
+.fragment claim_4e71d92d_internal, {
+	.loc test.sol, 23
+	DEPTH
+	ADDCONST -2
+	PICK
+	PUSHINT 100000000
+	GREATER
+	THROWIFNOT 100
+	.loc test.sol, 24
+	ACCEPT
+	.loc test.sol, 53
+	GETGLOB 15
+	THROWIFNOT 100
+	.loc test.sol, 55
+	PUSHINT 0
+	BLKPUSH 2, 0
+	.loc test.sol, 58
+	GETGLOB 15
+	EQINT 1
+	PUSHCONT {
+		.loc test.sol, 59
+		GETGLOB 9
+		GETGLOB 10
+		PUSHINT 267
+		DICTGET
+		ZEROSWAPIFNOT
+		PUSHCONT {
+			PLDU 128
+		}
+		IF
+		BLKDROP2 3, 1
+		.loc test.sol, 60
+		GETGLOB 12
+		.loc test.sol, 61
+		GETGLOB 13
+	}
+	PUSHCONT {
+		.loc test.sol, 63
+		GETGLOB 9
+		GETGLOB 11
+		PUSHINT 267
+		DICTGET
+		ZEROSWAPIFNOT
+		PUSHCONT {
+			PLDU 128
+		}
+		IF
+		BLKDROP2 3, 1
+		.loc test.sol, 64
+		GETGLOB 13
+		.loc test.sol, 65
+		GETGLOB 12
+	}
+	IFELSE
+	.loc test.sol, 68
+	PUSH S2
+	GTINT 0
+	THROWIFNOT 100
+	.loc test.sol, 69
+	ACCEPT
+	.loc test.sol, 71
+	XC2PU S2, S2, S1
+	MUL
+	UFITS 128
+	ROT
+	DIV
+	ADD
+	UFITS 16
+	.loc test.sol, 73
+	GETGLOB 9
+	NEWC
+	STSLICECONST x62_
+	STSLICE
+	SWAP
+	STGRAMS
+	PUSHINT 107
+	STZEROES
+	ENDC
+	PUSHINT 1
+	SENDRAWMSG
+	.loc test.sol, 77
+	GETGLOB 9
+	GETGLOB 10
+	NEWC
+	PUSHPOW2 7
+	STZEROES
+	ROTREV
+	PUSHINT 267
+	DICTSETB
+	SETGLOB 10
+	.loc test.sol, 78
+	GETGLOB 9
+	GETGLOB 11
+	NEWC
+	PUSHPOW2 7
+	STZEROES
+	ROTREV
+	PUSHINT 267
+	DICTSETB
+	SETGLOB 11
+	.loc test.sol, 0
+}
+
+.fragment claim, {
+	DROP
+	GETGLOB 6
+	THROWIFNOT 76
+	GETGLOB 2
+	ISNULL
+	IFREF {
+		.inline c4_to_c7
+	}
+	.loc test.sol, 52
+	ENDS
+	.loc test.sol, 0
+	CALLREF {
+		.inline claim_4e71d92d_internal
+	}
+	CALLREF {
+		.inline c7_to_c4
+	}
+	THROW 0
+}
+
+.fragment constructor, {
+	DROP
+	GETGLOB 2
+	ISNULL
+	IFREF {
+		.inline c4_to_c7
+	}
+	GETGLOB 6
+	THROWIF 51
+	ENDS
+	.loc test.sol, 15
+	ACCEPT
+	.loc test.sol, 16
+	PUSHINT 0
+	SETGLOB 12
+	.loc test.sol, 17
+	PUSHINT 0
+	SETGLOB 13
+	.loc test.sol, 18
+	PUSHINT 0
+	SETGLOB 15
+	.loc test.sol, 19
+	GETGLOB 9
+	SETGLOB 14
+	.loc test.sol, 0
+	CALLREF {
+		.inline c7_to_c4
+	}
+	THROW 0
+}
+
+.fragment getOwner_893d20e8_internal, {
+	.loc test.sol, 23
+	DEPTH
+	ADDCONST -2
+	PICK
+	PUSHINT 100000000
+	GREATER
+	THROWIFNOT 100
+	.loc test.sol, 24
+	ACCEPT
+	.loc test.sol, 29
+	GETGLOB 9
+	GETGLOB 14
+	SDEQ
+	THROWIFNOT 100
+	.loc test.sol, 30
+	ACCEPT
+	.loc test.sol, 82
+	ACCEPT
+	.loc test.sol, 83
+	GETGLOB 14
+	.loc test.sol, 0
+}
+
+.fragment upd_only_time_in_c4, {
+	PUSHROOT
+	CTOS
+	LDU 256
+	LDU 64
+	NIP
+	GETGLOB 3
+	ROT
+	NEWC
+	STU 256
+	STU 64
+	STSLICE
+	ENDC
+	POPROOT
+}
+
+.fragment getOwner, {
+	DROP
+	GETGLOB 6
+	THROWIFNOT 76
+	GETGLOB 2
+	ISNULL
+	IFREF {
+		.inline c4_to_c7
+	}
+	.loc test.sol, 81
+	ENDS
+	.loc test.sol, 0
+	CALLREF {
+		.inline getOwner_893d20e8_internal
+	}
+	OVER
+	PUSHCONT {
+		PUSH S3
+		CTOS
+		LDU 2
+		LDMSGADDR
+		DROP
+		NIP
+		NEWC
+		STSLICECONST xc
+		STSLICE
+		PUSHINT 1
+		STUR 98
+		SWAP
+		NEWC
+		STSLICECONST x9ea5175d
+		STSLICE
+		STBREFR
+		ENDC
+		PUSHINT 0
+		SENDRAWMSG
+	}
+	PUSHCONT {
+		DROP
+	}
+	IFELSE
+	IFREF {
+		.inline upd_only_time_in_c4
+	}
+	THROW 0
+}
+
+.fragment stop_b309855c_internal, {
+	.loc test.sol, 23
+	DEPTH
+	ADDCONST -2
+	PICK
+	PUSHINT 100000000
+	GREATER
+	THROWIFNOT 100
+	.loc test.sol, 24
+	ACCEPT
+	.loc test.sol, 29
+	GETGLOB 9
+	GETGLOB 14
+	SDEQ
+	THROWIFNOT 100
+	.loc test.sol, 30
+	ACCEPT
+	.loc test.sol, 35
+	GETGLOB 15
+	THROWIF 100
+	.loc test.sol, 36
+	ACCEPT
+	.loc test.sol, 87
+	ACCEPT
+	.loc test.sol, 88
+	SETGLOB 15
+	.loc test.sol, 0
+}
+
+.fragment stop, {
+	DROP
+	GETGLOB 6
+	THROWIFNOT 76
+	GETGLOB 2
+	ISNULL
+	IFREF {
+		.inline c4_to_c7
+	}
+	.loc test.sol, 86
+	LDU 128
+	ENDS
+	.loc test.sol, 0
+	CALLREF {
+		.inline stop_b309855c_internal
+	}
+	CALLREF {
+		.inline c7_to_c4
+	}
+	THROW 0
+}
+
+.fragment vote_afda6a67_internal, {
+	.loc test.sol, 23
+	DEPTH
+	ADDCONST -2
+	PICK
+	PUSHINT 100000000
+	GREATER
+	THROWIFNOT 100
+	.loc test.sol, 24
+	ACCEPT
+	.loc test.sol, 35
+	GETGLOB 15
+	THROWIF 100
+	.loc test.sol, 36
+	ACCEPT
+	.loc test.sol, 41
+	DUP
+	EQINT 1
+	OVER
+	EQINT 2
+	OR
+	THROWIFNOT 100
+	.loc test.sol, 42
+	ACCEPT
+	.loc test.sol, 43
+	EQINT 1
+	PUSHCONT {
+		.loc test.sol, 44
+		GETGLOB 12
+		DEPTH
+		ADDCONST -2
+		PICK
+		ADD
+		UFITS 128
+		SETGLOB 12
+		.loc test.sol, 45
+		GETGLOB 9
+		GETGLOB 10
+		DUP2
+		PUSHINT 267
+		DICTGET
+		ZEROSWAPIFNOT
+		PUSHCONT {
+			PLDU 128
+		}
+		IF
+		DEPTH
+		ADDCONST -2
+		PICK
+		ADD
+		UFITS 128
+		NEWC
+		STU 128
+		ROTREV
+		PUSHINT 267
+		DICTSETB
+		SETGLOB 10
+	}
+	PUSHCONT {
+		.loc test.sol, 47
+		GETGLOB 13
+		DEPTH
+		ADDCONST -2
+		PICK
+		ADD
+		UFITS 128
+		SETGLOB 13
+		.loc test.sol, 48
+		GETGLOB 9
+		GETGLOB 11
+		DUP2
+		PUSHINT 267
+		DICTGET
+		ZEROSWAPIFNOT
+		PUSHCONT {
+			PLDU 128
+		}
+		IF
+		DEPTH
+		ADDCONST -2
+		PICK
+		ADD
+		UFITS 128
+		NEWC
+		STU 128
+		ROTREV
+		PUSHINT 267
+		DICTSETB
+		SETGLOB 11
+	}
+	IFELSE
+	.loc test.sol, 0
+}
+
+.fragment vote, {
+	DROP
+	GETGLOB 6
+	THROWIFNOT 76
+	GETGLOB 2
+	ISNULL
+	IFREF {
+		.inline c4_to_c7
+	}
+	.loc test.sol, 40
+	LDU 128
+	ENDS
+	.loc test.sol, 0
+	CALLREF {
+		.inline vote_afda6a67_internal
+	}
+	CALLREF {
+		.inline c7_to_c4
+	}
+	THROW 0
+}
+
+.fragment votes1, {
+	DROP
+	ENDS
+	CALLREF {
+		.inline c4_to_c7
+	}
+	GETGLOB 10
+	OVER
+	PUSHCONT {
+		PUSHSLICE xc0000000000000000000000000e6987f2e
+		NEWC
+		STSLICE
+		STDICT
+		ENDC
+		PUSHINT 0
+		SENDRAWMSG
+	}
+	IF
+	THROW 0
+}
+
+.fragment votes2, {
+	DROP
+	ENDS
+	CALLREF {
+		.inline c4_to_c7
+	}
+	GETGLOB 11
+	OVER
+	PUSHCONT {
+		PUSHSLICE xc0000000000000000000000000bfc2a590
+		NEWC
+		STSLICE
+		STDICT
+		ENDC
+		PUSHINT 0
+		SENDRAWMSG
+	}
+	IF
+	THROW 0
+}
+
+.fragment public_function_selector, {
+	DUP
+	PUSHINT 1120219248
+	LEQ
+	IFJMPREF {
+		DUP
+		PUSHINT 514135901
+		EQUAL
+		IFJMPREF {
+			.inline getOwner
+		}
+		DUP
+		PUSHINT 1069720976
+		EQUAL
+		IFJMPREF {
+			.inline votes2
+		}
+		DUP
+		PUSHINT 1120219248
+		EQUAL
+		IFJMPREF {
+			.inline claim
+		}
+	}
+	DUP
+	PUSHINT 1721270062
+	LEQ
+	IFJMPREF {
+		DUP
+		PUSHINT 1619774378
+		EQUAL
+		IFJMPREF {
+			.inline stop
+		}
+		DUP
+		PUSHINT 1721270062
+		EQUAL
+		IFJMPREF {
+			.inline votes1
+		}
+	}
+	DUP
+	PUSHINT 1756716863
+	EQUAL
+	IFJMPREF {
+		.inline constructor
+	}
+	DUP
+	PUSHINT 1818389900
+	EQUAL
+	IFJMPREF {
+		.inline vote
+	}
+}
+
+.fragment main_external, {
+	PUSHSLICE x8000000000000000000000000000000000000000000000000000000000000000001_
+	SETGLOB 9
+	OVER
+	CALLREF {
+		.inline c4_to_c7
+	}
+	LDU 1 ; haveSign msgSlice
+	SWAP
+	PUSHCONT {
+		PUSHPOW2 9
+		LDSLICEX
+		DUP
+		MYADDR
+		NEWC
+		STSLICE
+		STSLICE
+		ENDC
+		HASHCU
+		ROT
+		GETGLOB 2
+		CHKSIGNU
+		THROWIFNOT 40
+	}
+	IF
+	LDU 64 ; timestamp msgSlice
+	SWAP
+	.inline __replayProtection
+	LDU 32 ; funcId body
+	SWAP
+	CALLREF {
+		.inline public_function_selector
+	}
+	THROW 60
+}
+
+.fragment main_internal, {
+	PUSHROOT
+	CTOS
+	PUSHINT 320
+	SDSKIPFIRST
+	PLDI 1
+	SETGLOB 6
+	PUSH S2
+	CTOS
+	LDU 4 ; bounced tail
+	LDMSGADDR ; bounced src tail
+	DROP
+	SETGLOB 9
+	MODPOW2 1
+	IFRET
+	OVER
+	SEMPTY ; isEmpty
+	IFJMPREF {
+		GETGLOB 6
+		THROWIFNOT 76
+	}
+	OVER
+	LDUQ 32  ; [funcId] body' ok
+	THROWIFNOT 60
+	OVER
+	IFNOTJMPREF {
+		GETGLOB 6
+		THROWIFNOT 76
+	}
+	SWAP
+	CALLREF {
+		.inline public_function_selector
+	}
+	THROW 60
+}
+
+.fragment default_data_cell, {
+	PUSHINT 0
+	PUSHSLICE x2_
+	NEWC
+	PUSHINT 579
+	STZEROES
+	ROTREV
+	NEWC
+	STSLICE
+	STU 128
+	STBREFR
+	ENDC
+}
+
+.fragment onTickTock, {
+}
+
+; The code below forms a value of the StateInit type.
+.blob x4_ ; split_depth = nothing
+.blob x4_ ; special = nothing
+.blob xc_ ; code = just
+.cell { ; code cell
+	PUSHREFCONT {
+		DICTPUSHCONST 32
+		DICTUGETJMPZ
+		THROW 78
+		.code-dict-cell 32, {
+		}
+		.cell { ; version
+			.blob x736f6c20302e37362e30 ; sol 0.76.0
+		}
+	}
+	POPCTR c3
+	DUP
+	IFNOTJMPREF {
+		.inline main_internal
+	}
+	DUP
+	EQINT -1
+	IFJMPREF {
+		.inline main_external
+	}
+	DUP
+	EQINT -2
+	IFJMPREF {
+		.inline onTickTock
+	}
+	THROW 11
+}
+.blob xc_ ; data = just
+.cell { 
+	.inline-computed-cell default_data_cell, 0
+}
+.blob x4_ ; library = hme_empty

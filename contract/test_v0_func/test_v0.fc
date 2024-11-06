@@ -1,0 +1,28 @@
+;; Define the pragma to specify the FunC version
+pragma ton-solidity >= 0.58.0;
+
+;; Contract storage
+int counter; ;; State variable to store the counter value
+
+;; Increment function
+int increment() {
+    ;; Increment the counter by 1
+    counter = counter + 1;
+    return ();
+}
+
+;; Getter function for counter
+int get_counter() {
+    ;; Returns the value of counter
+    return counter;
+}
+
+;; Main entry point for the contract
+() main() {
+    ;; Message selector: increment or get_counter based on the input message
+    if (msg.selector == 0x1) { ;; Use 0x1 as the selector for increment
+        increment();
+    } else if (msg.selector == 0x2) { ;; Use 0x2 as the selector for get_counter
+        return get_counter();
+    }
+}

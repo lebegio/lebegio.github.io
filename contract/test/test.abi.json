@@ -1,0 +1,74 @@
+{
+	"ABI version": 2,
+	"version": "2.4",
+	"header": ["time"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "vote",
+			"inputs": [
+				{"name":"option","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "claim",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getOwner",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "stop",
+			"inputs": [
+				{"name":"winOption","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "votes1",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"votes1","type":"map(address,uint128)"}
+			]
+		},
+		{
+			"name": "votes2",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"votes2","type":"map(address,uint128)"}
+			]
+		}
+	],
+	"events": [
+	],
+	"fields": [
+		{"init":true,"name":"_pubkey","type":"uint256"},
+		{"init":false,"name":"_timestamp","type":"uint64"},
+		{"init":false,"name":"_constructorFlag","type":"bool"},
+		{"init":false,"name":"votes1","type":"map(address,uint128)"},
+		{"init":false,"name":"votes2","type":"map(address,uint128)"},
+		{"init":false,"name":"sum1","type":"uint128"},
+		{"init":false,"name":"sum2","type":"uint128"},
+		{"init":false,"name":"owner","type":"address"},
+		{"init":false,"name":"winner","type":"uint128"}
+	]
+}
