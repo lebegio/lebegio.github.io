@@ -1,0 +1,111 @@
+#include "imports/stdlib.fc";
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+
+}
+
+;; Voting contract in Func
+
+;; Define options as constants
+const None = 0;
+const Option1 = 1;
+const Option2 = 2;
+
+;; State variables (init with zero values)
+global int totalVotesOption1;
+global int totalVotesOption2;
+global int totalAmount;
+global int votingEndTime;
+global int votingEnded;
+global slice winnerAddress;
+
+
+;; Cell to store votes as dictionary with key -> address and value -> Vote struct
+global votes: cell = null();
+
+;; Initialize contract (similar to Solidity's constructor)
+() main() inline {
+    ;; Example voting duration: set votingEndTime to now + duration (in seconds)
+    int duration = 3600;  ;; e.g., 1 hour in seconds
+    votingEndTime := now() + duration;
+    votingEnded := 0;
+}
+
+;; Function to submit a vote
+int vote(slice address, int option, int amount) {
+    ;; Ensure voting is active and amount is greater than zero
+    if (now() >= votingEndTime) { throw(100); }  ;; Voting has ended
+    if (amount <= 0) { throw(101); }             ;; Must send positive amount
+
+    ;; Check if the voter has already voted
+    let (found, existingVote) = dict_get(votes, address);
+    if (found && existingVote.option != None) { throw(102); }  ;; Already voted
+
+    ;; Store the vote in votes dictionary
+    let newVote = (Vote { option = option; amount = amount });
+    dict_set(votes, address, newVote);
+
+    ;; Update total amount
+    totalAmount += amount;
+
+    ;; Increment the vote count for the chosen option
+    if (option == Option1) {
+        totalVotesOption1 += amount;
+    } else if (option == Option2) {
+        totalVotesOption2 += amount;
+    } else {
+        throw(103);  ;; Invalid option
+    }
+
+    ;; Return success code
+    return(0);
+}
+
+;; Function to end voting
+int endVoting() {
+    if (now() < votingEndTime) { throw(200); }    ;; Voting is still ongoing
+    if (votingEnded != 0) { throw(201); }         ;; Voting already ended
+
+    votingEnded := 1;
+
+    ;; Determine the winner
+    if (totalVotesOption1 > totalVotesOption2) {
+        winnerAddress := slice("Option1 Winner");
+    } else if (totalVotesOption2 > totalVotesOption1) {
+        winnerAddress := slice("Option2 Winner");
+    } else {
+        winnerAddress := slice("Tie");
+    }
+
+    return(0);
+}
+
+;; Function to distribute rewards to winning voters
+int distributeRewards(int winningOption) {
+    ;; Ensure voting has ended and winning option is valid
+    if (votingEnded == 0) { throw(300); }
+
+    let totalVotes = if winningOption == Option1 then totalVotesOption1 else totalVotesOption2;
+
+    ;; Iterate through votes and distribute rewards
+    let rewardAmount = 0;
+    dict_foreach(votes, |address, vote| {
+        if (vote.option == winningOption) {
+            rewardAmount = (vote.amount * totalAmount) / totalVotes;
+            send_raw_message(address, rewardAmount, 0);
+        }
+    });
+
+    return(0);
+}
+
+;; Function to withdraw funds in case of a tie
+int withdraw(slice address) {
+    if (votingEnded == 0) { throw(400); }        ;; Voting has not ended
+    let (found, vote) = dict_get(votes, address);
+    if (!found || vote.option != None) { throw(401); }  ;; Only non-voters can withdraw
+
+    send_raw_message(address, vote.amount, 0);   ;; Allow non-voters to withdraw
+    return(0);
+}
+

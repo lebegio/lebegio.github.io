@@ -3,3 +3,4 @@ bip39.txt
 tg_bot/local_config.py
 misc/
 .venv/
+func/private_config.ts
