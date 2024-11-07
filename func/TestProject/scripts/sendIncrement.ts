@@ -1,6 +1,6 @@
 import { getHttpEndpoint } from "@orbs-network/ton-access";
 import { mnemonicToWalletKey } from "ton-crypto";
-import { TonClient, WalletContractV4, Address, WalletContractV5R1 } from "@ton/ton";
+import { TonClient, WalletContractV3R2, WalletContractV4, Address, WalletContractV5R1 } from "@ton/ton";
 import { TestContract } from "../wrappers/TestContract"; // this is the interface class we just implemented
 import { CONTRACT_ADDRESS, MNEMONIC } from "../../private_config"
 
@@ -11,7 +11,7 @@ export async function run() {
 
     // open wallet v4 (notice the correct wallet version here)
     const key = await mnemonicToWalletKey(MNEMONIC.split(" "));
-    const wallet = WalletContractV4.create({ publicKey: key.publicKey, workchain: 0 });
+    const wallet = WalletContractV3R2.create({ publicKey: key.publicKey, workchain: 0 });
     if (!await client.isContractDeployed(wallet.address)) {
         return console.log("wallet is not deployed");
     }
