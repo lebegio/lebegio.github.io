@@ -1,113 +1,192 @@
 #include "imports/stdlib.fc";
+;; VotingContract in FunC for the TON blockchain
 
-import 
+int equal_slice_bits(slice a, slice b) asm "SDEQ";
+int equal_slices(slice a, slice b) asm "SDEQ";
 
-() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
-
+;; Function to get the sender's address (returns slice)
+slice get_sender_address() inline {
+    ;; Retrieve and return the caller's address (as a slice)
+    slice msg = get_data().begin_parse();
+    return msg~load_msg_addr();
 }
 
-;; Voting contract in Func
-
-;; Define options as constants
-const None = 0;
-const Option1 = 1;
-const Option2 = 2;
-
-;; State variables (init with zero values)
-global int totalVotesOption1;
-global int totalVotesOption2;
-global int totalAmount;
-global int votingEndTime;
-global int votingEnded;
-global slice winnerAddress;
-
-
-;; Cell to store votes as dictionary with key -> address and value -> Vote struct
-global votes: cell = null();
-
-;; Initialize contract (similar to Solidity's constructor)
-() main() inline {
-    ;; Example voting duration: set votingEndTime to now + duration (in seconds)
-    int duration = 3600;  ;; e.g., 1 hour in seconds
-    votingEndTime := now() + duration;
-    votingEnded := 0;
+;; Helper function to load the owner's address from the stored data (owner cell)
+slice get_owner_address(cell owner) inline {
+    ;; Load the address (slice) from the owner cell
+    slice owner_data = owner.begin_parse();
+    return owner_data~load_slice(256);  ;; Load address as a slice (assuming it's 256 bits)
 }
 
-;; Function to submit a vote
-int vote(slice address, int option, int amount) {
-    ;; Ensure voting is active and amount is greater than zero
-    if (now() >= votingEndTime) { throw(100); }  ;; Voting has ended
-    if (amount <= 0) { throw(101); }             ;; Must send positive amount
+;; Function to save contract state
+() save_data(int op1_votes, int op2_votes, cell op1_voters, cell op2_voters, int is_voting_active, int winning_option, cell owner) impure inline {
+    ;; Pack and store data into the persistent storage cell
+    set_data(begin_cell()
+        .store_int(op1_votes, 64)
+        .store_int(op2_votes, 64)
+        .store_ref(op1_voters)
+        .store_ref(op2_voters)
+        .store_int(is_voting_active, 1)
+        .store_int(winning_option, 2)
+        .store_cell(owner)  ;; Store the owner as a cell
+        .end_cell());
+}
 
-    ;; Check if the voter has already voted
-    let (found, existingVote) = dict_get(votes, address);
-    if (found && existingVote.option != None) { throw(102); }  ;; Already voted
+;; Function to load contract state
+(int, int, cell, cell, int, int, cell) load_data() impure inline {
+    ;; Load and unpack data from the persistent storage cell
+    var ds = get_data().begin_parse();
+    return (
+        ds~load_int(64),   ;; op1_votes
+        ds~load_int(64),   ;; op2_votes
+        ds~load_ref(),     ;; op1_voters
+        ds~load_ref(),     ;; op2_voters
+        ds~load_int(1),    ;; is_voting_active
+        ds~load_int(2),    ;; winning_option
+        ds~load_cell()     ;; owner (corrected: Load the owner as a cell)
+    );
+}
 
-    ;; Store the vote in votes dictionary
-    let newVote = (Vote { option = option; amount = amount });
-    dict_set(votes, address, newVote);
+;; Function to add a voter to the list (returns updated cell)
+cell add_voter(cell voters, slice voter_address, int voter_amount) inline {
+    ;; Add a new voter to the cell list
+    return begin_cell()
+        .store_ref(voters)
+        .store_slice(voter_address)
+        .store_int(voter_amount, 64)
+        .end_cell();
+}
 
-    ;; Update total amount
-    totalAmount += amount;
+;; Function to stop the voting process and set the winner
+() stop_voting(int winner) impure {
+    ;; Load data from cell
+    var (op1_votes, op2_votes, op1_voters, op2_voters, is_voting_active, winning_option, owner) = load_data();
 
-    ;; Increment the vote count for the chosen option
-    if (option == Option1) {
-        totalVotesOption1 += amount;
-    } else if (option == Option2) {
-        totalVotesOption2 += amount;
-    } else {
-        throw(103);  ;; Invalid option
+    ;; Load the owner's address from the owner cell
+    slice owner_address = get_owner_address(owner);
+
+    ;; Ensure only the owner can stop voting and winner option is valid
+    if (equal_slices(get_sender_address(), owner_address) & ((winner == 1) | (winner == 2))) {
+        is_voting_active = 0;
+        winning_option = winner;
+
+        ;; Save updated data back to cell
+        save_data(op1_votes, op2_votes, op1_voters, op2_voters, is_voting_active, winning_option, owner);
     }
-
-    ;; Return success code
-    return(0);
 }
 
-;; Function to end voting
-int endVoting() {
-    if (now() < votingEndTime) { throw(200); }    ;; Voting is still ongoing
-    if (votingEnded != 0) { throw(201); }         ;; Voting already ended
+;; Function to distribute winnings to the voters of the winning option
+() distribute_winnings() impure {
+    ;; Load data from cell
+    var (op1_votes, op2_votes, op1_voters, op2_voters, is_voting_active, winning_option, owner) = load_data();
 
-    votingEnded := 1;
+    ;; Ensure voting is inactive and winning option is set
+    if ((is_voting_active == 0) & (winning_option != 0)) {
+        int total_payout = op1_votes + op2_votes;
+        cell voters;
+        int total_votes;
 
-    ;; Determine the winner
-    if (totalVotesOption1 > totalVotesOption2) {
-        winnerAddress := slice("Option1 Winner");
-    } else if (totalVotesOption2 > totalVotesOption1) {
-        winnerAddress := slice("Option2 Winner");
-    } else {
-        winnerAddress := slice("Tie");
-    }
-
-    return(0);
-}
-
-;; Function to distribute rewards to winning voters
-int distributeRewards(int winningOption) {
-    ;; Ensure voting has ended and winning option is valid
-    if (votingEnded == 0) { throw(300); }
-
-    let totalVotes = if winningOption == Option1 then totalVotesOption1 else totalVotesOption2;
-
-    ;; Iterate through votes and distribute rewards
-    let rewardAmount = 0;
-    dict_foreach(votes, |address, vote| {
-        if (vote.option == winningOption) {
-            rewardAmount = (vote.amount * totalAmount) / totalVotes;
-            send_raw_message(address, rewardAmount, 0);
+        ;; Choose the correct voters and total votes based on the winning option
+        if (winning_option == 1) {
+            voters = op1_voters;
+            total_votes = op1_votes;
+        } 
+        if (winning_option == 2) {
+            voters = op2_voters;
+            total_votes = op2_votes;
         }
-    });
 
-    return(0);
+        ;; Distribute to each voter proportionally to their contribution
+        while (voters.slice_len() > 0) {
+            slice voter_data = voters~begin_parse();
+            slice voter_address = voter_data~load_slice(256);
+            int voter_amount = voter_data~load_int(64);
+            int payout = (voter_amount * total_payout) / total_votes;
+
+            ;; Send the payout
+            send_raw_message(voter_address, payout, 1);
+            voters = voter_data~end_parse();
+        }
+
+        ;; Reset storage for potential reuse
+        op1_votes = 0;
+        op2_votes = 0;
+        op1_voters = begin_cell().end_cell();
+        op2_voters = begin_cell().end_cell();
+        is_voting_active = 1;
+        winning_option = 0;
+
+        ;; Save updated data back to cell
+        save_data(op1_votes, op2_votes, op1_voters, op2_voters, is_voting_active, winning_option, owner);
+    }
 }
 
-;; Function to withdraw funds in case of a tie
-int withdraw(slice address) {
-    if (votingEnded == 0) { throw(400); }        ;; Voting has not ended
-    let (found, vote) = dict_get(votes, address);
-    if (!found || vote.option != None) { throw(401); }  ;; Only non-voters can withdraw
+;; Function to handle voting
+() vote(int option, int amount) impure {
+    ;; Load data from cell
+    var (op1_votes, op2_votes, op1_voters, op2_voters, is_voting_active, winning_option, owner) = load_data();
 
-    send_raw_message(address, vote.amount, 0);   ;; Allow non-voters to withdraw
-    return(0);
+    ;; Check if voting is active and option is valid
+    if ((is_voting_active == 1) & ((option == 1) | (option == 2))) {
+        slice voter_address = get_sender_address();  ;; Corrected to slice
+
+        if (option == 1) {
+            op1_votes += amount;
+            op1_voters = add_voter(op1_voters, voter_address, amount);
+        }
+        if (option == 2) {
+            op2_votes += amount;
+            op2_voters = add_voter(op2_voters, voter_address, amount);
+        }
+
+        ;; Save updated data back to cell
+        save_data(op1_votes, op2_votes, op1_voters, op2_voters, is_voting_active, winning_option, owner);
+    }
 }
+
+;; Main function to deploy the contract
+() deploy() impure {
+    ;; Initialize contract storage
+    int op1_votes = 0;
+    int op2_votes = 0;
+    cell op1_voters = begin_cell().end_cell();  ;; Initialize as empty cell
+    cell op2_voters = begin_cell().end_cell();  ;; Initialize as empty cell
+    int is_voting_active = 1;
+    int winning_option = 0;
+    slice owner = get_sender_address();
+
+    ;; Pack data and store it
+    set_data(begin_cell()
+        .store_int(op1_votes, 64)
+        .store_int(op2_votes, 64)
+        .store_ref(op1_voters)
+        .store_ref(op2_voters)
+        .store_int(is_voting_active, 1)
+        .store_int(winning_option, 2)
+        .store_cell(begin_cell().store_slice(owner).end_cell())  ;; Convert slice to cell before storing
+        .end_cell());
+}
+
+;; Function to process incoming messages
+() recv_internal(int msg_value, int my_balance, cell in_msg_full, slice in_msg_body) impure {
+    ;; Extract function selector from in_msg_body
+    int selector = in_msg_body~load_uint(32);
+
+    ;; Call appropriate function based on selector
+    if (selector == 0x1) {
+        int option = in_msg_body~load_int(32);
+        vote(option, msg_value);
+    } 
+    if (selector == 0x2) {
+        int winner = in_msg_body~load_int(32);
+        if ((winner == 1) | (winner == 2)) {
+            stop_voting(winner);
+        }
+    } 
+    if (selector == 0x3) {
+        distribute_winnings();
+    }
+}
+
+
 
