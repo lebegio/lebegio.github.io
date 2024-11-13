@@ -1,0 +1,105 @@
+#include "imports/stdlib.fc";
+;; data format
+;; 64 bits -- op1 sum
+;; 64 bits -- op1 count
+;; 64 bits -- op2 sum
+;; 64 bits -- op2 count
+;; 64 bits -- balance
+;; 64 bits -- voting status
+;; ref -- map addres[256 bits] -> sum[64]
+
+;; msg formt
+;; 32 bits -- op
+;;
+
+
+;; LOAD DATA
+(int, int, int, int, int, int, cell) load_data() inline {
+    slice ds = get_data().begin_parse();
+    return (ds~load_uint(64), ds~load_uint(64), ds~load_uint(64), ds~load_uint(64), ds~load_uint(64), ds~load_uint(64), ds~load_dict());
+}
+
+() save_data(int x1, int y1, int x2, int y2, int balance, int voting_status, cell mp) impure inline {
+    set_data(
+        begin_cell().store_uint(x1, 64).store_uint(y1, 64).store_uint(x2, 64).store_uint(y2, 64).store_uint(balance, 64).store_uint(voting_status, 64).store_dict(mp).end_cell());
+}
+
+slice load_owner_address() inline {
+    var ds = get_data().begin_parse();
+    return ds~load_msg_addr();
+}
+
+
+;; PARSING
+slice parse_sender_address(cell in_msg_full) inline {
+    var cs = in_msg_full.begin_parse();
+    var flags = cs~load_uint(4);
+    slice sender_address = cs~load_msg_addr();
+    return sender_address;
+}
+
+;; PROCESS MSG
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) {         ;; check if incoming message is empty (with no body)
+        return ();                              ;; return successfully and accept an empty message
+    }
+    ;; load from storage
+    int op = in_msg_body~load_uint(32);
+    (int sum1, int cnt1, int sum2, int cnt2, int balance, int voting_status, cell mp) = load_data();
+
+    balance = my_balance;
+    ;; parse in message
+    slice sender_address = parse_sender_address(in_msg_full);
+
+    ;; op == 1 -- check balance and store in map
+    if (op == 1) {
+        if (voting_status != 0) { ;; voting is over, only claim is available
+            return ();
+        }
+        int vote_option = in_msg_body~load_uint(64);
+        if (vote_option == 1) {
+            cnt1 += 1;
+            sum1 += in_msg_full.load_coins();
+        }
+
+        if (vote_option == 2) {
+            cnt2 += 1;
+            sum2 += in_msg_full.load_coins();
+        }
+
+        save_data(x1, y1, x2, y2, balance, voting_status, mp);
+    }
+
+    ;; op == 2 -- claim by user
+    if (op == 2) {
+        if (voting_status != 1) { ;; voting in progress, claim is not available
+            return ();
+        }
+        ;; send_raw_message()
+    }
+
+    ;; op == 3 -- stop voting
+    if (op == 3) {
+        ;; check sender address, only owner can stop voting
+        if (sender_address != load_owner_address()) {
+            return ();
+        }
+        voting_status = 1;
+        save_data(x1, y1, x2, y2, balance, voting_status, mp);
+    }
+
+    ;; op == 4 -- send to another wallet
+    if (op == 4) {
+
+    }
+}
+
+;; GETTERS
+(int, int, int, int, int, int, cell) view_data() method_id {
+    (int sum1, int cnt1, int sum2, int cnt2, int balance, int voting_status, cell mp) = load_data();
+    return (sum1, cnt1, sum2, cnt2, balance, voting_status, mp);
+}
+
+(slice) view_owner_address() method_id {
+    return (load_owner_address());
+}
