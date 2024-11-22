@@ -3,3 +3,5 @@ bip39.txt
 tg_bot/local_config.py
 misc/
 .venv/
+node_modules/
+.vscode/
